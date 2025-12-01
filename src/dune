@@ -1,0 +1,9 @@
+(executable
+ (name day1)
+ (libraries core))
+
+(menhir
+ (modules day1_parser))
+
+(ocamllex
+ (modules day1_lexer))
