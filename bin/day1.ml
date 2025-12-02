@@ -1,1 +1,1 @@
-let () = Day1.run
+let () = Aoc.Day1.run "inputs/day1-in.txt"

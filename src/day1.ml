@@ -54,8 +54,8 @@ let%test_unit "1 to -101" =
 let%test_unit "0 to 200" =
   [%test_eq: int * int] (reduce 0 200) (2, 0)
 
-let run =
-  let file = In_channel.create "inputs/day1-in.txt" in
+let run filename =
+  let file = In_channel.create filename in
   let lexbuffer = Lexing.from_channel file in
   let input = parse_input lexbuffer
   in printf "first part: %d" (count_zeroes input 50 0);
