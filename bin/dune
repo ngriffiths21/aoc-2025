@@ -1,3 +1,7 @@
 (executable
  (name day1)
  (libraries aoc))
+
+(executable
+ (name day2)
+ (libraries aoc))

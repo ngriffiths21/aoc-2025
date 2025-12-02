@@ -6,7 +6,7 @@
   (pps ppx_jane)))
 
 (menhir
- (modules day1_parser))
+ (modules day1_parser day2_parser))
 
 (ocamllex
- (modules day1_lexer))
+ (modules day1_lexer day2_lexer))
