@@ -1,6 +1,9 @@
-(executable
+(library
  (name day1)
- (libraries core))
+ (libraries core)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))
 
 (menhir
  (modules day1_parser))
