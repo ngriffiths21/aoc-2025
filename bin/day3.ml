@@ -1,0 +1,1 @@
+let () = Aoc.Day3.run "inputs/day3-in.txt"
