@@ -13,3 +13,7 @@
 (executable
  (name day4)
  (libraries aoc))
+
+(executable
+ (name day5)
+ (libraries aoc))

@@ -7,9 +7,7 @@ let print_position outx lexbuf =
 
 let parse_with_error runparser lexer lexbuffer =
   try runparser lexer lexbuffer with
-  | Day4_lexer.SyntaxError msg ->
-    fprintf stderr "%a: %s\n" print_position lexbuffer msg;
-    exit (-1)
-  | Day4_parser.Error ->
+  | e ->
     fprintf stderr "%a: parsing error\n" print_position lexbuffer;
+    fprintf stderr "%s" ((Exn.to_string e) ^ "\n");
     exit (-1)
