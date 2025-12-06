@@ -17,3 +17,7 @@
 (executable
  (name day5)
  (libraries aoc))
+
+(executable
+ (name day6)
+ (libraries aoc))
