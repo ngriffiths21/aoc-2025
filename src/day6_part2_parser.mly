@@ -1,4 +1,4 @@
-%token <int> INT
+%token <int> DIGIT
 %token SPACE
 %token NEWLINE
 %token PLUS
@@ -15,7 +15,11 @@ valrows:
   vr = nonempty_list(valrow) { vr }
 
 valrow:
-  list(SPACE); ns = separated_nonempty_list(nonempty_list(SPACE), INT); NEWLINE { ns }
+  ns = nonempty_list(valcell); NEWLINE { ns }
+
+valcell:
+  | SPACE { 0 }
+  | d = DIGIT { d }
 
 operators:
   ops = separated_nonempty_list(nonempty_list(SPACE), operator) { ops }
