@@ -8,7 +8,7 @@ exception SyntaxError of string
 let digit = ['0'-'9']
 let newline = "\n" | "\r\n"
 let space = " "
-let end = space* newline* eof
+let end = newline* eof
 
 rule read =
   parse

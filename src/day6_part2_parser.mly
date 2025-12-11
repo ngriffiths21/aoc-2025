@@ -5,7 +5,7 @@
 %token TIMES
 %token EOF
 
-%start<(int list list * (int -> int -> int) list)> prog
+%start<(int list list * [`Space | `Times | `Plus] list)> prog
 %%
 
 prog:
@@ -22,8 +22,9 @@ valcell:
   | d = DIGIT { d }
 
 operators:
-  ops = separated_nonempty_list(nonempty_list(SPACE), operator) { ops }
+  ops = nonempty_list(operator) { ops }
 
 operator:
-  | TIMES { ( * ) }
-  | PLUS { (+) }
+  | SPACE { `Space }
+  | TIMES { `Times }
+  | PLUS { `Plus }
