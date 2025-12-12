@@ -1,9 +1,10 @@
+open Core
+
+exception No_points
+exception No_tree
+
 module KDTree = struct
-  module Point = struct
-    module T = struct
-      type t = int * int * int
-      (* comparison functions, but account for different axes *)
-  end
+  type point = int * int * int
 
   type axis =
     | X
@@ -14,71 +15,69 @@ module KDTree = struct
     | Leaf of axis
     | Node of axis * point * t * t
   
-  let project (x, y, z) = function
+  let project (x, y, z): axis -> int = function
     | X -> x
     | Y -> y
     | Z -> z
   
-  let next_axis ax = function
+  let next_axis = function
     | X -> Y
     | Y -> Z
     | Z -> X
   
-  let rec add tree pt =
-    match tree with
-    | Leaf axis -> Node (pt, Leaf (next_axis axis), Leaf (next_axis axis))
-    | Node (axis, split, tree1, tree2) -> 
-      if project pt axis > project split axis then
-        Node (axis, split, tree1, add tree2 pt)
-      else Node (axis, split, add tree1 pt, tree2)
-  
   let split_list ax lst =
+    let len = List.length lst in
+    let compare x1 x2 = Int.compare (project x1 ax) (project x2 ax) in
+    let sorted = List.sort ~compare lst in
+    List.split_n sorted (len / 2)
 
   
   let of_list pts_list =
     let rec of_list' ax lst =
-      match pts_list with 
+      match lst with 
       | [] -> Leaf ax
       | _ ->
-        let median, left, right = split_list ax lst in
-        let right_tree = of_list' (next_axis ax) right in
+        let left, right = split_list ax lst in
+        let median, rest = match right with
+        | m :: rest -> m, rest
+        | [] -> raise No_points in
+        let right_tree = of_list' (next_axis ax) rest in
         let left_tree = of_list' (next_axis ax) left in
-        Node (ax, median, left_tree, right_tree)
+        Node (ax, median, left_tree, right_tree) in
+    of_list' X pts_list
 end
 
-(* notes on of_list impl
+let best_pt (pt1, pt1_dist) (pt2, pt2_dist) =
+  if pt2_dist < pt1_dist then (pt2, pt2_dist)
+  else (pt1, pt1_dist)
 
-I'm using a non-tail-recursive structure here which might be space inefficient.
-I could imagine another strategy where each call to of_list':
+let calc_dist pt1 pt2: int =
+  let dists : int list = List.map [KDTree.X; KDTree.Y; KDTree.Z] ~f:(fun a -> Int.pow (KDTree.project pt1 a - KDTree.project pt2 a) 2) in
+  List.fold_left dists ~init:0 ~f:(+)
 
-- Adds the median to the tree
-- Consumes that list from the queue but also pushes the two resulting lists (left & right of the median) and their axes
+let find_closest tree box excepts = 
+  let rec find_closest' tr bx nn nn_dist =
+    match tr with
+    | KDTree.Leaf _ -> nn, nn_dist
+    | KDTree.Node (ax, pt, nd1, nd2) ->
+      let hyperplane_dist = Int.abs @@ KDTree.project pt ax - KDTree.project box ax in
+      if hyperplane_dist > nn_dist then
+        let closer_subtree =
+          if KDTree.project box ax > KDTree.project pt ax then nd2 (* box is on positive side of hyperplane *)
+          else nd1 in
+        find_closest' closer_subtree bx nn nn_dist
+      else if Set.mem excepts pt then best_pt (find_closest' nd1 bx nn nn_dist) (find_closest' nd2 bx nn nn_dist)
+      else let pt_dist = calc_dist pt box in
+      if pt_dist < nn_dist then
+        best_pt (find_closest' nd1 bx pt pt_dist) (find_closest' nd2 bx pt pt_dist)
+      else best_pt (find_closest' nd1 bx nn nn_dist) (find_closest' nd2 bx nn nn_dist) in
+  match tree with
+  | KDTree.Leaf _ -> raise No_tree
+  | KDTree.Node (_, pt, _, _) -> find_closest' tree box pt (calc_dist pt box)
 
-I think this is the way to do tail recursion. The queue saves space because at each iteration we can remove the previous iteration's
-data. It sort of turns the problem into a process of sorting into order by medians, tracking axis changes, and then doing the quick "add tree" op.
-Here the whole tree is passed to each iteration, we aren't building it up recursively.
 
-An alternative way to do it more cheaply is to build up recursively, which is in general not a space problem -- because
-the whole tree needs to be built anyway, so it's not that different to build it incrementally during function calls. The problem of course
-is if there's too much data on the stack.
-
-So to remove this extra stack data we can just maintain the whole list of points, and pass constraints instead of copies of the list.
-
-Another way: at each iteration, first calculate the shallowest leaf, then insert the median element of those that fit there.
-In other words at each iteration, pass the whole outstanding list, then descend the tree breadth first until a leaf is found;
-each time we pass to a lower depth we also want to shorten the list, but breadth first means this won't be tail recursive. So I
-think this fails.
-
-Another trade off would be maintaining 3 sorted lists, one along each axis, and popping the median from *all* at each iteration.
-
-I'm not sure which is best. In the non-tail-recursive approach I already wrote, yes, we make copies of the list
-but once the list is copied, the old ref is nullified. The only thing that grows is the tree itself, which would just
-grow on the stack instead in the tail recursive version.
-
-Basically, the tail recursive approach may allow a bit of optimization but I'm not convinced
-that the non-tail-recursive way is significantly more overhead. In particular,
-the non-tail-recursive structure costs some constant multiple of the tree itself in terms of memory;
-the final chain of returns is kind of like moving some data from stack to heap and deleting some data,
-which is very different from a reduce operation where the size of the result is much smaller than the input list.
-
-*)
+let run filename =
+  let file = In_channel.create filename in
+  let lexbuf = Lexing.from_channel file in
+  let parsed = Parse.parse_with_error Day8_parser.prog Day8_lexer.read lexbuf in
+  printf "read %d input lines\n" (List.length parsed)

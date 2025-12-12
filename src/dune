@@ -14,7 +14,8 @@
   day5_parser
   day6_parser
   day6_part2_parser
-  day7_parser))
+  day7_parser
+  day8_parser))
 
 (ocamllex
  (modules
@@ -25,4 +26,5 @@
   day5_lexer
   day6_lexer
   day6_part2_lexer
-  day7_lexer))
+  day7_lexer
+  day8_lexer))
